@@ -16,14 +16,27 @@ namespace cvisoftware
 {
     public partial class Form1 : Form
     {
-        private string labCode= "2018021108701";
-        private string navPostURL = "http://115.28.236.114/RestInterfaceSystem/testUnitNavigationInfoController/addTestUnitNavigationInfo";
-        private string testUnitPostURL = "http://115.28.236.114/RestInterfaceSystem/testUnitNavigationInfoController/addTestUnitConfig";
+        private static string labCode = "2018021108701";
+        private static string restHost = "http://115.28.236.114/RestInterfaceSystem";
+        private static string navPostURL = string.Format("{0}/testUnitNavigationInfoController/addTestUnitNavigationInfo", restHost);
+        private static string testUnitPostURL = string.Format("{0}/testUnitNavigationInfoController/addTestUnitConfig", restHost);
+        private static string windowAddPostURL = string.Format("{0}/windowConfigController/addWindowConfig", restHost);
+        /// <summary>
+        /// 存放所有的测试单元
+        /// </summary>
+        ArrayList refrigeratorList = new ArrayList();
         public Form1()
         {
             InitializeComponent();
             systemInit();
             navigationInit();
+            windowInit();
+        }
+
+        private void windowInit()
+        {
+            //throw new NotImplementedException();
+
         }
 
         private void navigationInit()
@@ -62,7 +75,7 @@ namespace cvisoftware
                 string res = PostData(navPostURL, postDataString);
             }
             //添加10个测试单元
-            ArrayList bridges = new ArrayList();
+            
             for(int i=0;i<10;i++)
             {
                 TestUnit tmpBridge = new TestUnit();
@@ -78,11 +91,11 @@ namespace cvisoftware
                 tmpBridge.IsGroupInfoDefault = true;
                 //设置是否为差值模式？？不懂是什么了
                 tmpBridge.DiffMode = 1;
-                bridges.Add(tmpBridge);
+                refrigeratorList.Add(tmpBridge);
                 
             }
             //添加监测单元到数据表
-            foreach(TestUnit tmp in bridges)
+            foreach(TestUnit tmp in refrigeratorList)
             {
                 string postDataString = string.Format("testUnitNo={0}&testUnitName={1}&belongedId={3}&ifBorrow={4}&isGroupInfoDefault={5}&englishName={6}&diffMode={7}&&labCode={8}"
                     , tmp.TestUnitNo, tmp.TestUnitName, tmp.BelongedId, tmp.BorrowInfo.ToString(), tmp.IsGroupInfoDefault.ToString(),tmp.EnTestUnitName,tmp.DiffMode.ToString(),labCode);
@@ -129,7 +142,7 @@ namespace cvisoftware
             //定义添加系统表数据的url
             string url2 = "http://115.28.236.114/RestInterfaceSystem/systemInfoController/addSystemInfo";
             string data2 = string.Format("labCode={17}&noPowerLimit=5&softwareName={0}&companyName={1}&testUnitNum={2}&sensorNum={3}&category={4}&language={5}&testUnitNameConfig={6}&inputLink={7}&commonSensorNum={8}&englishSoftwareName={9}&englishTestUnitNameConfig={10}&displayFlag={11}&displayTimeLimit={12}&infoQueryTimeLimit={13}&testTable={14}&labName={15}&englishLabName={16}",
-                sysInfo.SoftwareName,sysInfo.CompanyName,sysInfo.TestUnitNum,sysInfo.SensorNum,sysInfo.Category,sysInfo.Language,sysInfo.TestUnitNameConfig,sysInfo.InputLink,sysInfo.CommonSensorNum,sysInfo.EnSoftwareName,sysInfo.EnTestUnitNameConfig,sysInfo.DisplayFlag,sysInfo.DisplayTimeLimit,sysInfo.InfoQueryTimeLimit,null,sysInfo.LabName,sysInfo.EnLabName,this.labCode);
+                sysInfo.SoftwareName,sysInfo.CompanyName,sysInfo.TestUnitNum,sysInfo.SensorNum,sysInfo.Category,sysInfo.Language,sysInfo.TestUnitNameConfig,sysInfo.InputLink,sysInfo.CommonSensorNum,sysInfo.EnSoftwareName,sysInfo.EnTestUnitNameConfig,sysInfo.DisplayFlag,sysInfo.DisplayTimeLimit,sysInfo.InfoQueryTimeLimit,null,sysInfo.LabName,sysInfo.EnLabName,labCode);
             //将数据添加到数据表中
             string result2 = PostData(url2, data2);
 
