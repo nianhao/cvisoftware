@@ -18,27 +18,154 @@ namespace cvisoftware
     {
         private static string labCode = "2018021108701";
         private static string restHost = "http://115.28.236.114/RestInterfaceSystem";
+        /// <summary>
+        /// 设置nav的接口地址
+        /// </summary>
         private static string navPostURL = string.Format("{0}/testUnitNavigationInfoController/addTestUnitNavigationInfo", restHost);
+        /// <summary>
+        /// 设置测试单元的接口地址
+        /// </summary>
         private static string testUnitPostURL = string.Format("{0}/testUnitNavigationInfoController/addTestUnitConfig", restHost);
+        /// <summary>
+        /// 设置主窗体的接口地址
+        /// </summary>
         private static string windowAddPostURL = string.Format("{0}/windowConfigController/addWindowConfig", restHost);
+        /// <summary>
+        /// 设置子窗体的接口地址
+        /// </summary>
+        private static string subWindowAddPostURL = string.Format("{0}/subWindowConfigController/addSubWindowConfig",restHost);
+        /// <summary>
+        /// 设置坐标系的接口地址
+        /// </summary>
+        private static string coordConfigURL = string.Format("{0}/coordinateConfigController/addCoordinateConfig",restHost);
         /// <summary>
         /// 存放所有的测试单元
         /// </summary>
         ArrayList refrigeratorList = new ArrayList();
+        /// <summary>
+        /// 存放所有的主窗口
+        /// </summary>
+        ArrayList mainWindowList = new ArrayList();
+        /// <summary>
+        /// 存放所有的子窗口
+        /// </summary>
+        ArrayList subWindowList = new ArrayList();
+        private static string [] sensorsStringList = {"温度&`C"};
         public Form1()
         {
             InitializeComponent();
             systemInit();
             navigationInit();
             windowInit();
+            subWindowInit();
+            coordInit();
+            sensorInit();
         }
 
-        private void windowInit()
+        private void sensorInit()
         {
             //throw new NotImplementedException();
+            int id = 1;
+            foreach(string sensor in sensorsStringList)
+            {
+                string name = sensor.Split('&')[0];
+                string unit = sensor.Split('&')[1];
 
+            }
         }
 
+        /// <summary>
+        /// 坐标系设置
+        /// </summary>
+        /// <param name="versionNo">版本号</param>
+        private void coordInit(string versionNo="3.1.0")
+        {
+            //throw new NotImplementedException();
+            for(int i=0;i<refrigeratorList.Count;i++)
+            {
+                TestUnit tmpRef = refrigeratorList[i] as TestUnit;
+                tmpRef.CoordinateInfo[0] = new Coordinate();
+                //设置坐标系的编号
+                tmpRef.CoordinateInfo[0].CoordinateNo = 1;
+                //设置坐标系的名称
+                tmpRef.CoordinateInfo[0].Name = "温度";
+                //设置存放的子窗口的编号
+                tmpRef.CoordinateInfo[0].SubWindowNo = tmpRef.SubWindowInfo[0].SubWindowNo;
+                //设置坐标系的上限
+                tmpRef.CoordinateInfo[0].HighValue = 40;
+                //设置坐标系的下限
+                tmpRef.CoordinateInfo[0].LowValue = -40;
+                //设置传感器类型
+                tmpRef.CoordinateInfo[0].SensorType = 1;
+                //设置坐标系的英文名称
+                tmpRef.CoordinateInfo[0].EnName = "Temp";
+                string postDataString = string.Format("testUnitNo={0}&coordinateNo={1}&name={2}&subWindowNo={3}&highValue={4}&lowValue={5}&visible=1&sensorType={6}&englishName={7}&labCode={8}&versionNo={9}",
+                    tmpRef.TestUnitNo,tmpRef.CoordinateInfo[0].CoordinateNo,tmpRef.CoordinateInfo[0].Name,tmpRef.CoordinateInfo[0].SubWindowNo,tmpRef.CoordinateInfo[0].HighValue,tmpRef.CoordinateInfo[0].LowValue,tmpRef.CoordinateInfo[0].SensorType,tmpRef.CoordinateInfo[0].EnName,labCode,versionNo);
+                //配置并回显结果
+                string res = PostData(coordConfigURL, postDataString);
+                Trace.WriteLine(res);
+            }
+        }
+
+        /// <summary>
+        ///设置子窗口
+        /// </summary>
+        private void subWindowInit()
+        {
+            // throw new NotImplementedException();
+            for(int i=0;i<refrigeratorList.Count;i++)
+            {
+                var refrig = refrigeratorList[i] as TestUnit;
+                //先对每个testUnit设置一个子窗体看看效果
+                refrig.SubWindowInfo[0] = new SubWindow();
+                //设置子窗口编号
+                refrig.SubWindowInfo[0].SubWindowNo = 1;
+                //设置子窗体名称
+                refrig.SubWindowInfo[0].Name = "温度";
+                //设置子窗口高度比例加权系数
+                refrig.SubWindowInfo[0].Proportion = 1;
+                //设置所属的主窗口
+                refrig.SubWindowInfo[0].WindowNo = (mainWindowList[i] as Window).WindowNo;
+                string postDataString = string.Format("subWindowNo={0}&testUnitNo={1}&name={2}&visible=1&labCode={3}&proportion={4}&windowNo={5}",
+                    refrig.SubWindowInfo[0].SubWindowNo,refrig.SubWindowInfo[0].Name,labCode,refrig.SubWindowInfo[0].Proportion,refrig.SubWindowInfo[0].WindowNo);
+                //设置并且回显结果
+                string res = PostData(subWindowAddPostURL, postDataString);
+                Trace.WriteLine(res);
+            }
+        }
+
+        /// <summary>
+        /// 根据testUnit的数量，添加主窗体，并且根据index索引一一关联
+        /// </summary>
+        /// <param name="upperLimit"></param>
+        /// <param name="lowerLimit"></param>
+        private void windowInit(int upperLimit=500,int lowerLimit=0)
+        {
+            //throw new NotImplementedException();
+            for(int i=0;i<refrigeratorList.Count;i++)
+            {
+                Window tmpWindow = new Window();
+                tmpWindow.WindowNo = i + 1;//NO编号从1开始
+                //设置窗体名称
+                tmpWindow.WindowName = string.Format("主窗口{}", tmpWindow.WindowNo.ToString());
+                //设置曲线显示的默认显示时间上限
+                tmpWindow.UpperLimit = upperLimit;
+                //设置曲线显示的默认显示时间的下限
+                tmpWindow.LowerLimit = lowerLimit;
+                //构造post数据，配置主窗体
+                string postDataString = string.Format("windowNo={0}&testUnitNo={1}&windowName={2}&visible=1&upperLimit={3}&lowerLimit={4}&labCode={5}",
+                                                        tmpWindow.WindowNo,(refrigeratorList[i] as TestUnit).TestUnitNo,tmpWindow.WindowName,tmpWindow.UpperLimit,tmpWindow.LowerLimit,labCode);
+                //保存主窗体
+                mainWindowList.Add(tmpWindow);//??这里会不会存在浅拷贝的问题？
+                string res = PostData(windowAddPostURL, postDataString);
+                //回显设置的结果
+                Trace.WriteLine(res);
+
+            }
+        }
+        /// <summary>
+        /// 进行导航栏的初始化
+        /// </summary>
         private void navigationInit()
         {
             //throw new NotImplementedException();
