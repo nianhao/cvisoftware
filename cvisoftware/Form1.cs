@@ -94,11 +94,11 @@ namespace cvisoftware
         /// <summary>
         /// 定义正在使用的检测单元
         /// </summary>
-        TestUnit testingTestUnit = new TestUnit();
+        TestUnit[] testingTestUnit;//= new TestUnit();
         /// <summary>
         /// 检测单元
         /// </summary>
-        TestUnit testUnit = new TestUnit();
+        TestUnit[] testUnit;// = new TestUnit();
         public Form1()
         {
             InitializeComponent();
@@ -245,7 +245,11 @@ namespace cvisoftware
             for(int i=0;i<refrigeratorList.Count;i++)
             {
                 TestUnit tmpRef = refrigeratorList[i] as TestUnit;
-                tmpRef.CoordinateInfo[0] = new Coordinate();
+                var co = new Coordinate();
+                var t = tmpRef.CoordinateInfo.ToList();
+                t.Add(co);
+                tmpRef.CoordinateInfo = t.ToArray();
+               // tmpRef.CoordinateInfo[0] = new Coordinate();
                 //设置坐标系的编号
                 tmpRef.CoordinateInfo[0].CoordinateNo = 1;
                 //设置坐标系的名称
@@ -278,7 +282,10 @@ namespace cvisoftware
             {
                 var refrig = refrigeratorList[i] as TestUnit;
                 //先对每个testUnit设置一个子窗体看看效果
-                refrig.SubWindowInfo[0] = new SubWindow();
+                SubWindow tmpSW = new SubWindow();
+                var sub=refrig.SubWindowInfo.ToList();
+                sub.Add(tmpSW);
+                refrig.SubWindowInfo = sub.ToArray();
                 //设置子窗口编号
                 refrig.SubWindowInfo[0].SubWindowNo = 1;
                 //设置子窗体名称
@@ -291,6 +298,7 @@ namespace cvisoftware
                     refrig.SubWindowInfo[0].SubWindowNo,refrig.TestUnitNo,refrig.SubWindowInfo[0].Name,labCode,refrig.SubWindowInfo[0].Proportion,refrig.SubWindowInfo[0].WindowNo);
                 //设置并且回显结果
                 string res = PostData(subWindowAddPostURL, postDataString);
+                MessageBox.Show("子窗体初始化" + res);
                 Trace.WriteLine(res);
             }
         }
@@ -319,6 +327,7 @@ namespace cvisoftware
                 //保存主窗体
                 mainWindowList.Add(tmpWindow);//??这里会不会存在浅拷贝的问题？
                 string res = PostData(windowAddPostURL, postDataString);
+                MessageBox.Show("窗体初始化"+res);
                 //回显设置的结果
                 Trace.WriteLine(res);
 
@@ -388,8 +397,8 @@ namespace cvisoftware
                 try
                 {
                     string postDataString = string.Format("testUnitNo={0}&testUnitName={1}&belongedId={2}&ifBorrow={3}&isGroupInfoDefault={4}&englishName={5}&diffMode={6}&&labCode={7}"
-                   , tmp.TestUnitNo, tmp.TestUnitName, tmp.BelongedId, tmp.BorrowInfo.ToString(), tmp.IsGroupInfoDefault.ToString(), tmp.EnTestUnitName, tmp.DiffMode.ToString(), labCode);
-
+                   , tmp.TestUnitNo, tmp.TestUnitName, tmp.BelongedId, tmp.IfBorrow?'1':'0', tmp.IsGroupInfoDefault.ToString(), tmp.EnTestUnitName, tmp.DiffMode.ToString(), labCode);
+                    MessageBox.Show("导航栏初始化" + PostData(navPostURL, postDataString));
                 }
                 catch (Exception e)
                 {
@@ -404,8 +413,8 @@ namespace cvisoftware
         {
             SystemInfo sysInfo = new SystemInfo();
             sysInfo.SoftwareName = "实验1软件";
-            sysInfo.EnSoftwareName = "softWare for experiment";
-            sysInfo.CompanyName = "OUC-MML";
+            sysInfo.EnSoftwareName = "softWareforexperiment";
+            sysInfo.CompanyName = "实验室";
             sysInfo.EnTestUnitNameConfig = "Fridge";
             //设置检测单元总数，总计10台冰箱
             sysInfo.TestUnitNum = 10;
@@ -427,9 +436,9 @@ namespace cvisoftware
             //设置历史查询中曲线显示时间上限
             sysInfo.InfoQueryTimeLimit = 24;
             //设置实验室名称
-            sysInfo.LabName = "21180211087-01";
+            sysInfo.LabName = "崂山信南";
             //设置实验室英文名称
-            sysInfo.EnLabName = "21180211087-01";
+            sysInfo.EnLabName = "LaoShanSouth";
             //设置默认的功率
             sysInfo.DefaultNoPowerLimit = 5;
 
@@ -439,9 +448,10 @@ namespace cvisoftware
             //定义添加系统表数据的url
             string url2 = "http://115.28.236.114/RestInterfaceSystem/systemInfoController/addSystemInfo";
             string data2 = string.Format("labCode={17}&noPowerLimit=5&softwareName={0}&companyName={1}&testUnitNum={2}&sensorNum={3}&category={4}&language={5}&testUnitNameConfig={6}&inputLink={7}&commonSensorNum={8}&englishSoftwareName={9}&englishTestUnitNameConfig={10}&displayFlag={11}&displayTimeLimit={12}&infoQueryTimeLimit={13}&testTable={14}&labName={15}&englishLabName={16}",
-                sysInfo.SoftwareName,sysInfo.CompanyName,sysInfo.TestUnitNum,sysInfo.SensorNum,sysInfo.Category,sysInfo.Language,sysInfo.TestUnitNameConfig,sysInfo.InputLink,sysInfo.CommonSensorNum,sysInfo.EnSoftwareName,sysInfo.EnTestUnitNameConfig,sysInfo.DisplayFlag,sysInfo.DisplayTimeLimit,sysInfo.InfoQueryTimeLimit,null,sysInfo.LabName,sysInfo.EnLabName,labCode);
+                sysInfo.SoftwareName,sysInfo.CompanyName,sysInfo.TestUnitNum,sysInfo.SensorNum,sysInfo.Category,sysInfo.Language,sysInfo.TestUnitNameConfig,sysInfo.InputLink?'1':'0',sysInfo.CommonSensorNum,sysInfo.EnSoftwareName,sysInfo.EnTestUnitNameConfig,sysInfo.DisplayFlag,sysInfo.DisplayTimeLimit,sysInfo.InfoQueryTimeLimit,null,sysInfo.LabName,sysInfo.EnLabName,labCode);
             //将数据添加到数据表中
-            string result2 = PostData(url2, data2);
+            MessageBox.Show(data2);
+            MessageBox.Show(PostData(url2, data2));
 
         }
 
@@ -527,6 +537,10 @@ namespace cvisoftware
         /// <param name="e"></param>
         private void button_showObj_Click(object sender, EventArgs e)
         {
+            Trace.WriteLine(Application.StartupPath);
+            DataComponent.InitApplicationStartPath(Application.StartupPath);
+
+            DataComponent.GetControlType();
             try
             {
                 datamangeComponent = new DataComponent();
@@ -537,9 +551,15 @@ namespace cvisoftware
                 //throw;
                 Trace.WriteLine(ee.Message);
                 Trace.WriteLine(ee.StackTrace);
+                return;
             }
-            
-            DataComm.DataComponent.InitApplicationStartPath(Application.StartupPath);
+            //曲线初始化
+            int rtn = datamangeComponent.InitCurve();
+            //数据组件初始化
+            rtn = datamangeComponent.Init();
+            //获取全部的监测单元
+            testingTestUnit = datamangeComponent.GetAllTestingUnit();
+            int subWindowNum = testingTestUnit[0].SubWindowInfo.Length;
         }
     }
 }
