@@ -30,6 +30,7 @@
         {
             this.button_InitAll = new System.Windows.Forms.Button();
             this.button_showObj = new System.Windows.Forms.Button();
+            this.curvePanel = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // button_InitAll
@@ -52,11 +53,19 @@
             this.button_showObj.UseVisualStyleBackColor = true;
             this.button_showObj.Click += new System.EventHandler(this.button_showObj_Click);
             // 
+            // curvePanel
+            // 
+            this.curvePanel.Location = new System.Drawing.Point(160, 39);
+            this.curvePanel.Name = "curvePanel";
+            this.curvePanel.Size = new System.Drawing.Size(628, 388);
+            this.curvePanel.TabIndex = 2;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.curvePanel);
             this.Controls.Add(this.button_showObj);
             this.Controls.Add(this.button_InitAll);
             this.Name = "Form1";
@@ -69,6 +78,7 @@
 
         private System.Windows.Forms.Button button_InitAll;
         private System.Windows.Forms.Button button_showObj;
+        private System.Windows.Forms.Panel curvePanel;
     }
 }
 

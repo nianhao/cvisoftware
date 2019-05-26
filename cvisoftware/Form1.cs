@@ -12,6 +12,8 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using xCurveControl;
+
 namespace cvisoftware
 {
     public partial class Form1 : Form
@@ -25,7 +27,7 @@ namespace cvisoftware
         /// <summary>
         /// 设置测试单元的接口地址
         /// </summary>
-        private static string testUnitPostURL = string.Format("{0}/testUnitNavigationInfoController/addTestUnitConfig", restHost);
+        private static string testUnitPostURL = string.Format("{0}/testUnitConfigController/addTestUnitConfig", restHost);
         /// <summary>
         /// 设置主窗体的接口地址
         /// </summary>
@@ -39,9 +41,9 @@ namespace cvisoftware
         /// </summary>
         private static string coordConfigURL = string.Format("{0}/coordinateConfigController/addCoordinateConfig", restHost);
         /// <summary>
-        /// 添加sensor的接口地址
+        /// 添加sensorType的接口地址
         /// </summary>
-        private static string addSensorURL = string.Format("{0}/sensorTypeController/addSensorType", restHost);
+        private static string addSensorTypeURL = string.Format("{0}/sensorTypeController/addSensorType", restHost);
         /// <summary>
         /// 添加组配置的接口地址
         /// </summary>
@@ -59,6 +61,10 @@ namespace cvisoftware
         /// </summary>
         private static string addSensorConfigURL = string.Format("{0}/sensorConfigController/addSensorConfig", restHost);
         /// <summary>
+        /// 存放导航信息
+        /// </summary>
+        ArrayList bridgeNavs = new ArrayList();
+        /// <summary>
         /// 存放所有的测试单元
         /// </summary>
         ArrayList refrigeratorList = new ArrayList();
@@ -71,13 +77,20 @@ namespace cvisoftware
         /// </summary>
         ArrayList subWindowList = new ArrayList();
         /// <summary>
+        /// 存放全部的传感器信息
+        /// </summary>
+        ArrayList sensorList = new ArrayList();
+        /// <summary>
         /// 存放所有的组信息
         /// </summary>
         ArrayList groupList = new ArrayList();
         /// <summary>
         /// 配置传感器的类型
         /// </summary>
-        private static string [] sensorsStringList = {"温度&`C"};
+        private static string [] sensorsStringList = {"温度&`C","频率&HZ","电压&V","电流&A","功率&W","耗电量&KW*h",};
+        private static int[] sensorUpLimit = { 200, 200, 500, 100, 5000, 200 };
+        private static int[] sensorLowLimit = { -100, 0, 0, 0, 0, 0 };
+        private static int[] typeId = { 1, 4, 3, 5, 6, 7 };
         /// <summary>
         /// 配置组信息
         /// </summary>
@@ -86,7 +99,11 @@ namespace cvisoftware
         /// <summary>
         /// 定义数据组件
         /// </summary>
-        DataComponent datamangeComponent; 
+        private DataComponent dataComponent = new DataComponent();
+        /// <summary>
+        /// 也许是曲线组件
+        /// </summary>
+        private CurveControl curveControl = new CurveControl();
         /// <summary>
         /// 控制类型
         /// </summary>
@@ -99,6 +116,7 @@ namespace cvisoftware
         /// 检测单元
         /// </summary>
         TestUnit[] testUnit;// = new TestUnit();
+        private int subWindowNo = 1;
         public Form1()
         {
             InitializeComponent();
@@ -108,30 +126,65 @@ namespace cvisoftware
         private void sensorConfigInit(string versionNo="2.1.0")
         {
             //throw new NotImplementedException();
+            Sensor[] sensors = constructSensors();
             foreach(TestUnit refrig in refrigeratorList)
             {
-                //这里应该有17个传感器,这里先搞一个试一下 
-                Sensor sensor = new Sensor();
-                sensor.SensorNo = 1;
-                sensor.Name = "温度1";
-                sensor.EnName = "Temp1";
-                //对所有的物理及逻辑传感器进行总排序
-                sensor.TotalSequenceNo = 7;
-                //坐标系序号
-                sensor.CoordinateNo = 1;
-                //所属的组号
-                sensor.GroupNo = 1;
-                //小数位精度
-                sensor.DotNum = "0.0";
-                string postDataString = string.Format("testUnitNo={0}&sensorNo={1}&name{2}&englishName={3}&totalSequenceNo={4}&coordinateNo={5}&selected=1&visible=1&dotNum={6}&groupNo={7}&maxSelect=1&minSelect=1&averageSelect=1&integralAvSelect=1&diffSelect=1&isVirtual=0&state=1&commonSelect=0&labCode={8}&versionNo={9}&coordinateNoStr={10}&selectedStr=1&visibleStr=1"
-                    ,refrig.TestUnitNo,sensor.SensorNo,sensor.Name,sensor.EnName,sensor.TotalSequenceNo,sensor.CoordinateNo,sensor.DotNum,sensor.GroupNo,labCode,versionNo,sensor.CoordinateNo);
-                //配置并回显结果
-                string res = PostData(addSensorConfigURL, postDataString);
-                Trace.WriteLine("添加传感器配置" + sensor.Name + " " + res);
+                for(int j=0;j<sensors.Length;j++)
+                {
+                    string postDataString = string.Format("testUnitNo={0}&sensorNo={1}&name={2}&englishName={3}&totalSequenceNo={4}&coordinateNo={5}&selected=1&visible=1&dotNum={6}&groupNo={7}&maxSelect=1&minSelect=1&averageSelect=1&integralAvSelect=1&diffSelect=0&isVirtual=0&state=1&commonSelect=0&labCode={8}&versionNo={9}&coordinateNoStr={10}&selectedStr=1&visibleStr=1&assemblyName=func&functionName=funcName&functionParas=&functionClass=functionClass&keyParaMeter=1", 
+                        refrig.TestUnitNo, 
+                        sensors[j].SensorNo, 
+                        sensors[j].Name, 
+                        sensors[j].EnName, 
+                        sensors[j].TotalSequenceNo, 
+                        sensors[j].CoordinateNo, 
+                        sensors[j].DotNum, 
+                        sensors[j].GroupNo, 
+                        labCode, 
+                        versionNo, 
+                        sensors[j].CoordinateNo);
+                    //配置并回显结果
+                    string res = PostData(addSensorConfigURL, postDataString);
+                   // MessageBox.Show("添加传感器配置" + "\n" + postDataString + "\n" + res);
+                    Trace.WriteLine("添加传感器配置"  + " " + res);
+                }
+
                
             }
 
         }
+
+        private Sensor[] constructSensors()
+        {
+            //throw new NotImplementedException();
+            string[] tName = {"温度1", "温度2", "温度3", "温度4", "温度5", "温度6", "温度7", "温度8", "温度9", "温度10", "干温",
+                "湿温", "频率", "电压", "电流", "功率", "耗电量"};
+
+            string[] tEnName = {"Temperature1", "Temperature2", "Temperature3", "Temperature4", "Temperature5", "Temperature6",
+                "Temperature7", "Temperature8", "Temperature9", "Temperature10", "Dry Temperature", "Wet Temperature",
+                "Frequency", "Voltage", "Current", "Power", "Power Consumption"};
+
+            int[] tSequenceNo = { 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 2, 366, 363, 364, 365, 367 };
+
+            int[] coordinateNo = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 4, 5, 6, 7 };
+
+            int[] groupNo = { 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 1, 1, 5, 5, 5, 5, 5 };
+            int length = tName.Length;
+            Sensor [] sensors =new Sensor [length];
+            for(int i=0;i<length;i++)
+            {
+                sensors[i] = new Sensor();
+                sensors[i].SensorNo = i + 1;
+                sensors[i].Name = tName[i];
+                sensors[i].TotalSequenceNo = tSequenceNo[i];
+                sensors[i].CoordinateNo = coordinateNo[i];
+                sensors[i].GroupNo = groupNo[i];
+                sensors[i].EnName = tEnName[i];
+                sensors[i].DotNum = "0.0";
+            }
+            return sensors;
+        }
+
         /// <summary>
         /// 配置传感器的名字
         /// </summary>
@@ -144,7 +197,10 @@ namespace cvisoftware
                 var sensorName = new SensorName();
                 sensorName.Id = id++;
                 sensorName.Name = sN;
-                string postDataString = string.Format("labCode={0}&name={1}&id={2}", labCode, sensorName.Name, sensorName.Id);
+                string postDataString = string.Format("labCode={0}&name={1}&id={2}", 
+                    labCode, 
+                    sensorName.Name, 
+                    sensorName.Id);
             }
             //throw new NotImplementedException();
         }
@@ -207,12 +263,12 @@ namespace cvisoftware
         }
 
         /// <summary>
-        ///添加传感器，从sensorStringList中，按照id=1，自动设置typeid
+        ///添加传感器，从sensorStringList中，按照typeId，自动设置typeid
         /// </summary>
-        private void sensorInit()
+        private void sensorTypeInit()
         {
             //throw new NotImplementedException();
-            int id = 1;
+            int index = 0;
             foreach(string sensor in sensorsStringList)
             {
                 //从全局配置中提取信息
@@ -220,17 +276,43 @@ namespace cvisoftware
                 string unit = sensor.Split('&')[1];
                 //进行一系列的设置
                 Sensor tmpSensor = new Sensor();
-                tmpSensor.TypeID = id++;
+                tmpSensor.TypeID = typeId[index];
                 tmpSensor.TypeName = name;
                 tmpSensor.Unit = unit;
                 SensorLimit tmpSensorLimit = new SensorLimit();
-                tmpSensorLimit.UpLimit = 200;
-                tmpSensorLimit.LowLimit = -100;
+                tmpSensorLimit.UpLimit = sensorUpLimit[index];
+                tmpSensorLimit.LowLimit = sensorLowLimit[index];
                 string postDataString = string.Format("sensorTypeId={0}&labCode={1}&sensorTypeName={2}&unit={3}&upLimit={4}&lowLimit={5}",
-                    tmpSensor.TypeID, labCode, tmpSensor.TypeName, tmpSensor.Unit, tmpSensorLimit.UpLimit, tmpSensorLimit.LowLimit);
+                       tmpSensor.TypeID, 
+                       labCode, 
+                       tmpSensor.TypeName, 
+                       tmpSensor.Unit, 
+                       tmpSensorLimit.UpLimit, 
+                       tmpSensorLimit.LowLimit);
                 //提交配置并且回显配置结果
-                string res = PostData(addSensorURL, postDataString);
-                Trace.WriteLine(res);
+                //对于温度，提交12次
+                if(index==0)
+                {
+                    for(int i=0;i<12;i++)
+                    {
+                        //这里可能存在浅复制的问题
+                        sensorList.Add(tmpSensor);
+                        string res = PostData(addSensorTypeURL, postDataString);
+                        MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
+                        Trace.WriteLine(res);
+                    }
+                }
+                else
+                {
+                    sensorList.Add(tmpSensor);
+                    string res = PostData(addSensorTypeURL, postDataString);
+                    MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
+                    Trace.WriteLine(res);
+                }
+                
+                //进入到下一个传感器的配置
+                index++;
+                
 
             }
         }
@@ -245,31 +327,65 @@ namespace cvisoftware
             for(int i=0;i<refrigeratorList.Count;i++)
             {
                 TestUnit tmpRef = refrigeratorList[i] as TestUnit;
-                var co = new Coordinate();
-                var t = tmpRef.CoordinateInfo.ToList();
-                t.Add(co);
-                tmpRef.CoordinateInfo = t.ToArray();
-               // tmpRef.CoordinateInfo[0] = new Coordinate();
-                //设置坐标系的编号
-                tmpRef.CoordinateInfo[0].CoordinateNo = 1;
-                //设置坐标系的名称
-                tmpRef.CoordinateInfo[0].Name = "温度";
-                //设置存放的子窗口的编号
-                tmpRef.CoordinateInfo[0].SubWindowNo = tmpRef.SubWindowInfo[0].SubWindowNo;
-                //设置坐标系的上限
-                tmpRef.CoordinateInfo[0].HighValue = 40;
-                //设置坐标系的下限
-                tmpRef.CoordinateInfo[0].LowValue = -40;
-                //设置传感器类型
-                tmpRef.CoordinateInfo[0].SensorType = 1;
-                //设置坐标系的英文名称
-                tmpRef.CoordinateInfo[0].EnName = "Temp";
-                string postDataString = string.Format("testUnitNo={0}&coordinateNo={1}&name={2}&subWindowNo={3}&highValue={4}&lowValue={5}&visible=1&sensorType={6}&englishName={7}&labCode={8}&versionNo={9}",
-                    tmpRef.TestUnitNo,tmpRef.CoordinateInfo[0].CoordinateNo,tmpRef.CoordinateInfo[0].Name,tmpRef.CoordinateInfo[0].SubWindowNo,tmpRef.CoordinateInfo[0].HighValue,tmpRef.CoordinateInfo[0].LowValue,tmpRef.CoordinateInfo[0].SensorType,tmpRef.CoordinateInfo[0].EnName,labCode,versionNo);
-                //配置并回显结果
-                string res = PostData(coordConfigURL, postDataString);
-                Trace.WriteLine(res);
+                ArrayList coordList =addCoordInit();
+                //将生成的坐标系赋值给测试单元
+                tmpRef.CoordinateInfo =(Coordinate[]) coordList.ToArray(typeof(Coordinate));
+                for(int j=0;j<tmpRef.CoordinateInfo.Length;j++)
+                {
+                    string postDataString = string.Format("testUnitNo={0}&coordinateNo={1}&name={2}&subWindowNo={3}&highValue={4}&lowValue={5}&visible=1&sensorType={6}&englishName={7}&labCode={8}&versionNo={9}",
+                    tmpRef.TestUnitNo,
+                    tmpRef.CoordinateInfo[j].CoordinateNo,
+                    tmpRef.CoordinateInfo[j].Name,
+                    tmpRef.CoordinateInfo[j].SubWindowNo,
+                    tmpRef.CoordinateInfo[j].HighValue,
+                    tmpRef.CoordinateInfo[j].LowValue,
+                    tmpRef.CoordinateInfo[j].SensorType,
+                    tmpRef.CoordinateInfo[j].EnName,
+                    labCode,
+                    versionNo);
+                    //配置并回显结果
+                    string res = PostData(coordConfigURL, postDataString);
+                    MessageBox.Show("坐标系初始化" + "\n" + postDataString + "\n" + res);
+                    Trace.WriteLine(res);
+                }
+
             }
+        }
+        /// <summary>
+        /// 对每一个测试单元（这里特指冰箱)添加坐标系
+        /// </summary>
+        /// <param name="tmpRef"></param>
+        private ArrayList addCoordInit()
+        {
+            ArrayList coordList = new ArrayList();
+            string[] tName = { "温度", "频率", "耗电量", "电压", "电流", "功率" };
+
+            int[] highValue = { 40, 200, 30, 400, 30, 300 };
+
+            int[] lowValue = { -40, 0, 0, 0, 0, 0 };
+
+            int[] sensorType = { 1, 4, 7, 3, 5, 6 };
+
+            string[] tEnName = { "Temperature", "Frequency", "Power Consumption", "Voltage", "Current", "Power" };
+            for(int i=0;i<tName.Length;i++)
+            {
+                //新建一个坐标系
+                var co = new Coordinate();
+                co.CoordinateNo = i + 1;//从1开始标号
+                //设置坐标系的名字
+                co.Name = tName[i];
+                co.EnName = tEnName[i];
+                co.SubWindowNo = 1;//??不知道为什么直接设置为1
+                //设置数值范围
+                co.HighValue = highValue[i];
+                co.LowValue = lowValue[i];
+                //设置对应的传感器类型
+                co.SensorType = sensorType[i];
+                coordList.Add(co);
+            }
+            //throw new NotImplementedException();
+            return coordList;
+            
         }
 
         /// <summary>
@@ -291,15 +407,21 @@ namespace cvisoftware
                 //设置子窗体名称
                 refrig.SubWindowInfo[0].Name = "温度";
                 //设置子窗口高度比例加权系数
-                refrig.SubWindowInfo[0].Proportion = 1;
+                refrig.SubWindowInfo[0].Proportion = 2;
                 //设置所属的主窗口
-                refrig.SubWindowInfo[0].WindowNo = (mainWindowList[i] as Window).WindowNo;
+                //refrig.SubWindowInfo[0].WindowNo = (mainWindowList[i] as Window).WindowNo;
+                //!!这里为什么直接全部设置为1，不是有依赖吗？？
+                refrig.SubWindowInfo[0].WindowNo = 1;
                 string postDataString = string.Format("subWindowNo={0}&testUnitNo={1}&name={2}&visible=1&labCode={3}&proportion={4}&windowNo={5}",
-                    refrig.SubWindowInfo[0].SubWindowNo,refrig.TestUnitNo,refrig.SubWindowInfo[0].Name,labCode,refrig.SubWindowInfo[0].Proportion,refrig.SubWindowInfo[0].WindowNo);
+                       refrig.SubWindowInfo[0].SubWindowNo,
+                       refrig.TestUnitNo,
+                       refrig.SubWindowInfo[0].Name,
+                       labCode,refrig.SubWindowInfo[0].Proportion,
+                       refrig.SubWindowInfo[0].WindowNo);
                 //设置并且回显结果
                 string res = PostData(subWindowAddPostURL, postDataString);
-                MessageBox.Show("子窗体初始化" + res);
-                Trace.WriteLine(res);
+                MessageBox.Show("子窗体初始化" +"\n"+postDataString+"\n"+ res);
+                //Trace.WriteLine(res);
             }
         }
 
@@ -323,43 +445,46 @@ namespace cvisoftware
                 tmpWindow.LowerLimit = lowerLimit;
                 //构造post数据，配置主窗体
                 string postDataString = string.Format("windowNo={0}&testUnitNo={1}&windowName={2}&visible=1&upperLimit={3}&lowerLimit={4}&labCode={5}",
-                                                        tmpWindow.WindowNo,(refrigeratorList[i] as TestUnit).TestUnitNo,tmpWindow.WindowName,tmpWindow.UpperLimit,tmpWindow.LowerLimit,labCode);
+                       tmpWindow.WindowNo,
+                       (refrigeratorList[i] as TestUnit).TestUnitNo,
+                       tmpWindow.WindowName,
+                       tmpWindow.UpperLimit,
+                       tmpWindow.LowerLimit,
+                       labCode);
                 //保存主窗体
                 mainWindowList.Add(tmpWindow);//??这里会不会存在浅拷贝的问题？
                 string res = PostData(windowAddPostURL, postDataString);
-                MessageBox.Show("窗体初始化"+res);
+                MessageBox.Show("窗体初始化"+"\n"+postDataString+"\n"+res);
                 //回显设置的结果
-                Trace.WriteLine(res);
+                //Trace.WriteLine(res);
 
             }
         }
         /// <summary>
         /// 进行导航栏的初始化
         /// </summary>
-        private void navigationInit()
+        private void navigationInit(int rootId=20)
         {
             //throw new NotImplementedException();
             var nav0 = new Navigation();
             nav0.Name = "抽样室";
             //导航信息的ID
-            nav0.Id = 1;
+            nav0.Id = rootId;
             //对导航信息的简述
             nav0.Description = "实验1对冰箱抽样的实验";
             //定义在导航树的位置
             nav0.BelongedId = 0;
             nav0.EnName = "SanplingUnit";
-            //添加10个冰箱,都添加到id=1上面去
-            ArrayList bridgeNavs = new ArrayList();
             bridgeNavs.Add(nav0);
-            for(int i=0;i<1;i++)
+            for(int i=0;i<2;i++)
             {
                 var tmpNav = new Navigation();
                 //id变大一点，以免跟跟节点重复
                 tmpNav.Id = i + 5;//
-                tmpNav.Name = string.Format("{0}号测试室", i.ToString());
-                tmpNav.EnName = string.Format("#{0} room",i.ToString());
-                tmpNav.Description = string.Format("第{0}号测试室的检测单元的导航",i.ToString());
-                tmpNav.BelongedId = 1;
+                tmpNav.Name = string.Format("{0}号测试室", (i+'A').ToString());
+                tmpNav.EnName = string.Format("#{0} room", (i + 'A').ToString());
+                tmpNav.Description = string.Format("第{0}号测试室的检测单元的导航",(i+'A').ToString());
+                tmpNav.BelongedId = nav0.Id;
                 bridgeNavs.Add(tmpNav);
             }
             //定义了一个两级的导航栏 1--》5
@@ -368,12 +493,23 @@ namespace cvisoftware
             foreach(Navigation tmp in bridgeNavs)
             {
                 string postDataString = string.Format("id={0}&name={1}&description={2}&belongedId={3}&englishName={4}&labCode={5}",
-                    tmp.Id,tmp.Name,tmp.Description,tmp.BelongedId,tmp.EnName,labCode);
-                string res = PostData(navPostURL, postDataString);
+                    tmp.Id,
+                    tmp.Name,
+                    tmp.Description,
+                    tmp.BelongedId,
+                    tmp.EnName,
+                    labCode);
+                //string res = PostData(navPostURL, postDataString);
+                MessageBox.Show("导航栏初始化"+"\n\n"+postDataString+"\n" + PostData(navPostURL, postDataString));
             }
+
+
+        }
+        public void testUnitInit()
+        {
             //添加10个测试单元
-            
-            for(int i=0;i<10;i++)
+
+            for (int i = 0; i < 10; i++)
             {
                 TestUnit tmpBridge = new TestUnit();
                 tmpBridge.TestUnitNo = i + 1;//监测单元编号从1号开始
@@ -381,7 +517,10 @@ namespace cvisoftware
                 tmpBridge.TestUnitName = string.Format("{0}号冰箱", (i + 1).ToString());
                 tmpBridge.EnTestUnitName = string.Format("No {0} bridges", (i + 1).ToString());
                 //设置检测单元所属级别
-                tmpBridge.BelongedId = 5;//这里写死了，是不对的，以后再改
+                if (i<5)
+                    tmpBridge.BelongedId = (bridgeNavs[1] as Navigation).Id;//这里写死了，是不对的，以后再改
+                else
+                    tmpBridge.BelongedId = (bridgeNavs[2] as Navigation).Id;//这里写死了，是不对的，以后再改
                 //设置是否允许借用，1为允许
                 tmpBridge.IfBorrow = true;
                 //设置是否默认组信息
@@ -389,26 +528,35 @@ namespace cvisoftware
                 //设置是否为差值模式？？不懂是什么了
                 tmpBridge.DiffMode = 1;
                 refrigeratorList.Add(tmpBridge);
-                
+
             }
             //添加监测单元到数据表
-            foreach(TestUnit tmp in refrigeratorList)
+            foreach (TestUnit tmp in refrigeratorList)
             {
                 try
                 {
-                    string postDataString = string.Format("testUnitNo={0}&testUnitName={1}&belongedId={2}&ifBorrow={3}&isGroupInfoDefault={4}&englishName={5}&diffMode={6}&&labCode={7}"
-                   , tmp.TestUnitNo, tmp.TestUnitName, tmp.BelongedId, tmp.IfBorrow?'1':'0', tmp.IsGroupInfoDefault.ToString(), tmp.EnTestUnitName, tmp.DiffMode.ToString(), labCode);
-                    MessageBox.Show("导航栏初始化" + PostData(navPostURL, postDataString));
+                    string postDataString = string.Format("testUnitNo={0}&testUnitName={1}&belongedId={2}&ifBorrow={3}&borrowInfo={4}&isGroupInfoDefault={5}&groupInfoDefault={6}&dataBufferLength={7}&englishName={8}&diffMode={9}&labCode={10}&testType={11}", 
+                        tmp.TestUnitNo, 
+                        tmp.TestUnitName, 
+                        tmp.BelongedId,
+                        tmp.IfBorrow ? '1' : '0',
+                        "1@2@3@4",
+                        tmp.IsGroupInfoDefault ? '1' : '0', 
+                        "1@2@3",
+                        "100",
+                        tmp.EnTestUnitName, 
+                        tmp.DiffMode.ToString(), 
+                        labCode,
+                        "1");
+                    MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
                 }
                 catch (Exception e)
                 {
                     Trace.WriteLine(e.Message);
                     //throw;
                 }
-                           }
-
+            }
         }
-
         public void systemInit()
         {
             SystemInfo sysInfo = new SystemInfo();
@@ -521,12 +669,13 @@ namespace cvisoftware
         {
             systemInit();
             navigationInit();
+            testUnitInit();
             windowInit();
             subWindowInit();
             coordInit();
-            sensorInit();
-            groudInit();
-            prodInfoItemInit();
+            sensorTypeInit();
+            //groudInit();
+           // prodInfoItemInit();
             sensorNameInit();
             sensorConfigInit();
         }
@@ -537,29 +686,152 @@ namespace cvisoftware
         /// <param name="e"></param>
         private void button_showObj_Click(object sender, EventArgs e)
         {
-            Trace.WriteLine(Application.StartupPath);
+            //初始化控制类型，是主控还是远控
             DataComponent.InitApplicationStartPath(Application.StartupPath);
-
             DataComponent.GetControlType();
-            try
-            {
-                datamangeComponent = new DataComponent();
-            }
-            catch (Exception ee)
-            {
 
-                //throw;
-                Trace.WriteLine(ee.Message);
-                Trace.WriteLine(ee.StackTrace);
-                return;
-            }
             //曲线初始化
-            int rtn = datamangeComponent.InitCurve();
+            int rtn = dataComponent.InitCurve();
+
             //数据组件初始化
-            rtn = datamangeComponent.Init();
-            //获取全部的监测单元
-            testingTestUnit = datamangeComponent.GetAllTestingUnit();
-            int subWindowNum = testingTestUnit[0].SubWindowInfo.Length;
+            rtn = dataComponent.Init();
+
+            //获取正在测试的监测单元
+
+            testingTestUnit = dataComponent.GetAllTestUnit();
+            //testingTestUnit = dataComponent.GetAllTestingUnit();
+
+            //定义子窗口数、坐标系数、传感器数、组数
+            int subWindowNum, coordinateNum, sensorNum, groupNum;
+            int i, j;
+            subWindowNum = testingTestUnit[0].SubWindowInfo.Length;
+            coordinateNum = testingTestUnit[0].CoordinateInfo.Length;
+            sensorNum = testingTestUnit[0].SensorInfo.Length + testingTestUnit[0].AverageValueList.Count;
+            groupNum = testingTestUnit[0].GroupInfo.Length;
+
+
+            //定义一个曲线组件变量
+            CurveControl curveControl = new CurveControl();
+
+            //整个曲线显示组件的窗口初始化
+            curveControl.IniParentWindow(subWindowNum, coordinateNum, sensorNum, groupNum);
+
+            //初始化子窗口接口
+            for (int k1 = 0; k1 < testingTestUnit[0].SubWindowInfo.Length; k1++)
+            {
+                curveControl.IniSubWindow(testingTestUnit[0].SubWindowInfo[k1].SubWindowNo,
+                    testingTestUnit[0].SubWindowInfo[k1].Name, testingTestUnit[0].SubWindowInfo[k1].Proportion, testingTestUnit[0].SubWindowInfo[k1].Visible);
+            }
+
+            //初始化坐标系
+            List<int> initAllCoor = new List<int>();
+            for (j = 0; j < coordinateNum; j++)
+            {
+                if (testingTestUnit[0].CoordinateInfo[j].SubWindowNo == subWindowNo)
+                {
+                    curveControl.InitCoordinate(testingTestUnit[0].CoordinateInfo[j].CoordinateNo,
+                                                testingTestUnit[0].CoordinateInfo[j].Name,
+                                                1,
+                                                testingTestUnit[0].CoordinateInfo[j].Visible,
+                                                testingTestUnit[0].CoordinateInfo[j].HighValue,
+                                                testingTestUnit[0].CoordinateInfo[j].LowValue,
+                                                testingTestUnit[0].CoordinateInfo[j].UpLimit,
+                                                testingTestUnit[0].CoordinateInfo[j].LowLimit,
+                                                testingTestUnit[0].CoordinateInfo[j].Unit);
+                    initAllCoor.Add(testingTestUnit[0].CoordinateInfo[j].CoordinateNo);
+                }
+            }
+
+            //初始化组信息
+            for (i = 0; i < testingTestUnit[0].GroupInfo.Count(); i++)
+            {
+                Group oneGroup = new Group();
+                oneGroup = testingTestUnit[0].GroupInfo[i];
+                Boolean b = curveControl.SetGroupSelect(oneGroup.GroupNo, true);
+                curveControl.SetGroupName(oneGroup.GroupNo, oneGroup.Name);
+
+                curveControl.SetGroupStatisticSelect(oneGroup.GroupNo,
+                                                     oneGroup.MaxSelect,
+                                                     oneGroup.MinSelect,
+                                                     oneGroup.AverageSelect,
+                                                     oneGroup.IntegeraveSelect);
+            }
+
+            //确定传感器是否属于在此窗口内的坐标系
+            int copyCoordinate = 0;
+            //初始化传感器信息
+            for (i = 0; i < testingTestUnit[0].SensorInfo.Length; i++)
+            {
+                if (testingTestUnit[0].SensorInfo[i].BeBorrowed == false && testingTestUnit[0].SensorInfo[i].Selected == true)
+                {
+                    for (int z1 = 0; z1 < testingTestUnit[0].SensorInfo[i].CoordinateBelong.CoordinateNo.Length; z1++)
+                    {
+                        if (initAllCoor.Contains(testingTestUnit[0].SensorInfo[i].CoordinateBelong.CoordinateNo[z1]))
+                        {
+                            copyCoordinate = testingTestUnit[0].SensorInfo[i].CoordinateBelong.CoordinateNo[z1];
+                            break;
+                        }
+                    }
+
+                    curveControl.IniSensorAttri(testingTestUnit[0].SensorInfo[i].SensorNo,
+                                                testingTestUnit[0].SensorInfo[i].Name,
+                                                copyCoordinate,
+                                                testingTestUnit[0].SensorInfo[i].Visible,
+                                                testingTestUnit[0].SensorInfo[i].Selected,
+                                                testingTestUnit[0].SensorInfo[i].TotalSequenceNo,
+                                                testingTestUnit[0].SensorInfo[i].DotNum);
+
+                    //传感器颜色
+                    curveControl.SetSensorColorNo(testingTestUnit[0].SensorInfo[i].SensorNo,
+                                                  testingTestUnit[0].SensorInfo[i].ColorNo);
+
+                    //设置传感器组号
+                    curveControl.SetSensorGroupNo(testingTestUnit[0].SensorInfo[i].SensorNo,
+                                                  testingTestUnit[0].SensorInfo[i].GroupNo);
+                }
+            }
+
+            //添加传感器采集时间
+            List<float> DotHowLong = new List<float>();
+            float startLong = 0;
+            for (i = 0; i < 500; i++)
+            {
+                startLong = (float)(i * 0.006);
+                DotHowLong.Add(startLong);
+            }
+            curveControl.ReceiveDotHowLong(ref DotHowLong);
+
+            //添加传感器采集数值
+            List<float> DotValue = new List<float>();
+            List<float> DotValue2 = new List<float>();
+            List<float> DotValue3 = new List<float>();
+            List<float> DotValue4 = new List<float>();
+            for (i = 0; i < 500; i++)
+            {
+                DotValue.Add((float)(0 + i * 0.05));
+                DotValue2.Add((float)(30 - i * 0.05));
+                DotValue3.Add((float)(50 - i * 0.5));
+                DotValue4.Add((float)(35 - i * 0.01));
+            }
+
+            curveControl.ReceiveValue(1, ref DotValue);
+            curveControl.ReceiveValue(2, ref DotValue);
+            curveControl.ReceiveValue(3, ref DotValue2);
+            curveControl.ReceiveValue(4, ref DotValue3);
+            curveControl.ReceiveValue(15, ref DotValue4);
+
+            curveControl.EnableScroll(false, this.Height);
+            //语言
+            curveControl.ChangeLanguage(CurveControl.LanguageType.Chinese);
+
+            //设置控件内的布局
+            curveControl.RefreshLayout();
+            //画出曲线
+            curveControl.DrawPicCurve();
+            curveControl.IsFirstListView = false;
+            curvePanel.Controls.Add(curveControl);
+            //this.Controls.Add(curveControl);
+            curveControl.Dock = DockStyle.Fill;
         }
     }
 }
