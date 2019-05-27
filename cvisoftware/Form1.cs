@@ -18,7 +18,7 @@ namespace cvisoftware
 {
     public partial class Form1 : Form
     {
-        private static string labCode = "2018021108701";
+        internal static string labCode = "2118021108701";
         private static string restHost = "http://115.28.236.114/RestInterfaceSystem";
         /// <summary>
         /// 设置nav的接口地址
@@ -122,7 +122,13 @@ namespace cvisoftware
             InitializeComponent();
 
         }
-
+        private void logSysInfo(string info)
+        {
+            string timeNow = DateTime.Now.ToLocalTime().ToString();        // 2008-9-4 20:12:12
+            textBoxSysLog.AppendText("\n*******"+timeNow+"********"+"\n\n");
+            textBoxSysLog.AppendText(info);
+            textBoxSysLog.AppendText("\n\n");
+        }
         private void sensorConfigInit(string versionNo="2.1.0")
         {
             //throw new NotImplementedException();
@@ -145,7 +151,8 @@ namespace cvisoftware
                         sensors[j].CoordinateNo);
                     //配置并回显结果
                     string res = PostData(addSensorConfigURL, postDataString);
-                   // MessageBox.Show("添加传感器配置" + "\n" + postDataString + "\n" + res);
+                    // MessageBox.Show("添加传感器配置" + "\n" + postDataString + "\n" + res);
+                    logSysInfo("添加传感器配置" + "\n" + postDataString + "\n" + res);
                     Trace.WriteLine("添加传感器配置"  + " " + res);
                 }
 
@@ -229,7 +236,8 @@ namespace cvisoftware
             string postDataString = string.Format("itemNo={0}&itemName={1}&defaultContent={2}&inputMode={3}&queryCondition=1&selectItem={4}&print=1&display=1&changeable=1&englishName={5}&statusBar=1&englishDefaultContent={6}itemType={7}&versionNo={8}&labCode={9}"
                 ,prodInfoItem.itemno,prodInfoItem.itemname,prodInfoItem.defaultcontent,prodInfoItem.inputmode,prodInfoItem.selectitem[0],prodInfoItem.enitemname,prodInfoItem.endefaultcontent,prodInfoItem.itemtype,versionNo,labCode);
             string res = PostData(addProdInfoItemURL, postDataString);
-            Trace.WriteLine("添加条目信息"+prodInfoItem.itemname+res);
+            logSysInfo("添加条目信息 " + prodInfoItem.itemname + res);
+            Trace.WriteLine("添加条目信息 "+prodInfoItem.itemname+res);
 
         }
 
@@ -256,6 +264,7 @@ namespace cvisoftware
                 string postDataString = string.Format("groupNo={0}&labCode={1}&name={2}&englishName={3}&sensorType=1&deleteable=0&visible=1&minselect=1&maxSelect=1&averageSelect=1&integerAveSelect=1",
                     group.GroupNo, labCode, group.Name, group.EnName);
                 string res = PostData(addGroupURL, postDataString);
+                logSysInfo("配置组信息" + group.Name + "res");
                 Trace.WriteLine("配置组信息" + group.Name + "res");
             }
 
@@ -298,7 +307,8 @@ namespace cvisoftware
                         //这里可能存在浅复制的问题
                         sensorList.Add(tmpSensor);
                         string res = PostData(addSensorTypeURL, postDataString);
-                        MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
+                        //MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
+                        logSysInfo("添加传感器类型" + "\n" + postDataString + "\n" + res);
                         Trace.WriteLine(res);
                     }
                 }
@@ -306,7 +316,8 @@ namespace cvisoftware
                 {
                     sensorList.Add(tmpSensor);
                     string res = PostData(addSensorTypeURL, postDataString);
-                    MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
+                    //MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
+                    logSysInfo("添加传感器类型" + "\n" + postDataString + "\n" + res);
                     Trace.WriteLine(res);
                 }
                 
@@ -345,7 +356,8 @@ namespace cvisoftware
                     versionNo);
                     //配置并回显结果
                     string res = PostData(coordConfigURL, postDataString);
-                    MessageBox.Show("坐标系初始化" + "\n" + postDataString + "\n" + res);
+                    //MessageBox.Show("坐标系初始化" + "\n" + postDataString + "\n" + res);
+                    logSysInfo("坐标系初始化" + "\n" + postDataString + "\n" + res);
                     Trace.WriteLine(res);
                 }
 
@@ -420,7 +432,8 @@ namespace cvisoftware
                        refrig.SubWindowInfo[0].WindowNo);
                 //设置并且回显结果
                 string res = PostData(subWindowAddPostURL, postDataString);
-                MessageBox.Show("子窗体初始化" +"\n"+postDataString+"\n"+ res);
+                //MessageBox.Show("子窗体初始化" +"\n"+postDataString+"\n"+ res);
+                logSysInfo("子窗体初始化" + "\n" + postDataString + "\n" + res);
                 //Trace.WriteLine(res);
             }
         }
@@ -454,7 +467,8 @@ namespace cvisoftware
                 //保存主窗体
                 mainWindowList.Add(tmpWindow);//??这里会不会存在浅拷贝的问题？
                 string res = PostData(windowAddPostURL, postDataString);
-                MessageBox.Show("窗体初始化"+"\n"+postDataString+"\n"+res);
+                //MessageBox.Show("窗体初始化"+"\n"+postDataString+"\n"+res);
+                logSysInfo("窗体初始化" + "\n" + postDataString + "\n" + res);
                 //回显设置的结果
                 //Trace.WriteLine(res);
 
@@ -500,7 +514,8 @@ namespace cvisoftware
                     tmp.EnName,
                     labCode);
                 //string res = PostData(navPostURL, postDataString);
-                MessageBox.Show("导航栏初始化"+"\n\n"+postDataString+"\n" + PostData(navPostURL, postDataString));
+                //MessageBox.Show("导航栏初始化"+"\n\n"+postDataString+"\n" + PostData(navPostURL, postDataString));
+                logSysInfo("导航栏初始化" + "\n\n" + postDataString + "\n" + PostData(navPostURL, postDataString));
             }
 
 
@@ -548,7 +563,8 @@ namespace cvisoftware
                         tmp.DiffMode.ToString(), 
                         labCode,
                         "1");
-                    MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
+                    //MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
+                    logSysInfo("测试单元初始化" + "\n\n" + postDataString + "\n" + PostData(testUnitPostURL, postDataString));
                 }
                 catch (Exception e)
                 {
@@ -598,8 +614,9 @@ namespace cvisoftware
             string data2 = string.Format("labCode={17}&noPowerLimit=5&softwareName={0}&companyName={1}&testUnitNum={2}&sensorNum={3}&category={4}&language={5}&testUnitNameConfig={6}&inputLink={7}&commonSensorNum={8}&englishSoftwareName={9}&englishTestUnitNameConfig={10}&displayFlag={11}&displayTimeLimit={12}&infoQueryTimeLimit={13}&testTable={14}&labName={15}&englishLabName={16}",
                 sysInfo.SoftwareName,sysInfo.CompanyName,sysInfo.TestUnitNum,sysInfo.SensorNum,sysInfo.Category,sysInfo.Language,sysInfo.TestUnitNameConfig,sysInfo.InputLink?'1':'0',sysInfo.CommonSensorNum,sysInfo.EnSoftwareName,sysInfo.EnTestUnitNameConfig,sysInfo.DisplayFlag,sysInfo.DisplayTimeLimit,sysInfo.InfoQueryTimeLimit,null,sysInfo.LabName,sysInfo.EnLabName,labCode);
             //将数据添加到数据表中
-            MessageBox.Show(data2);
-            MessageBox.Show(PostData(url2, data2));
+            //MessageBox.Show(data2);
+            //MessageBox.Show(PostData(url2, data2));
+            logSysInfo("系统初始化\n" + data2 + PostData(url2, data2));
 
         }
 
@@ -667,6 +684,7 @@ namespace cvisoftware
         /// <param name="e"></param>
         private void button_InitAll_Click(object sender, EventArgs e)
         {
+            if (!checkLabCode()) return;
             systemInit();
             navigationInit();
             testUnitInit();
@@ -679,6 +697,27 @@ namespace cvisoftware
             sensorNameInit();
             sensorConfigInit();
         }
+
+        private bool checkLabCode()
+        {
+            //throw new NotImplementedException();
+            MessageBoxButtons messButton = MessageBoxButtons.OKCancel;
+            string message = string.Format("当前的LabCode设置为:{0}\n,点击确定继续，点击取消配置LabCode\n",labCode);
+            DialogResult dr = MessageBox.Show(message, "LabCode确认",messButton);
+            if (dr == DialogResult.OK)//如果点击“确定”按钮
+
+            {
+                return true;
+
+            }
+
+            else//如果点击“取消”按钮
+
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// 显示组件
         /// </summary>
@@ -832,6 +871,46 @@ namespace cvisoftware
             curvePanel.Controls.Add(curveControl);
             //this.Controls.Add(curveControl);
             curveControl.Dock = DockStyle.Fill;
+        }
+
+        private void buttonExport_Click(object sender, EventArgs e)
+        {
+            string fName;
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.InitialDirectory = "./";
+            openFileDialog.Filter = "所有文件|*.*";
+            openFileDialog.RestoreDirectory = true;
+            openFileDialog.FilterIndex = 1;
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                fName = openFileDialog.FileName;
+                try
+                {
+                    System.IO.File.WriteAllText(fName, this.textBoxSysLog.Text);
+                    MessageBox.Show("导出日志成功\n" + fName + "\n");
+                }
+                catch (Exception ee)
+                {
+                    MessageBox.Show("导出日志失败\n"+ee.Message+"\n");
+                    //throw;
+                }
+                
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            this.textBoxSysLog.Clear();
+        }
+
+        private void 修改LabCodeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            setLabCode setL = new setLabCode();
+            setL.Show();
         }
     }
 }
