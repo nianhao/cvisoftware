@@ -138,6 +138,7 @@ namespace cvisoftware
                 for(int j=0;j<sensors.Length;j++)
                 {
                     string postDataString = string.Format("testUnitNo={0}&sensorNo={1}&name={2}&englishName={3}&totalSequenceNo={4}&coordinateNo={5}&selected=1&visible=1&dotNum={6}&groupNo={7}&maxSelect=1&minSelect=1&averageSelect=1&integralAvSelect=1&diffSelect=0&isVirtual=0&state=1&commonSelect=0&labCode={8}&versionNo={9}&coordinateNoStr={10}&selectedStr=1&visibleStr=1&assemblyName=func&functionName=funcName&functionParas=&functionClass=functionClass&keyParaMeter=1", 
+                        //根据No将testUnit和Sensor进行关联
                         refrig.TestUnitNo, 
                         sensors[j].SensorNo, 
                         sensors[j].Name, 
@@ -160,7 +161,10 @@ namespace cvisoftware
             }
 
         }
-
+        /// <summary>
+        /// 为每一个冰箱生成对应的全部传感器
+        /// </summary>
+        /// <returns></returns>
         private Sensor[] constructSensors()
         {
             //throw new NotImplementedException();
@@ -170,7 +174,7 @@ namespace cvisoftware
             string[] tEnName = {"Temperature1", "Temperature2", "Temperature3", "Temperature4", "Temperature5", "Temperature6",
                 "Temperature7", "Temperature8", "Temperature9", "Temperature10", "Dry Temperature", "Wet Temperature",
                 "Frequency", "Voltage", "Current", "Power", "Power Consumption"};
-
+            //??不知道这个配置是干什么的
             int[] tSequenceNo = { 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 2, 366, 363, 364, 365, 367 };
 
             int[] coordinateNo = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 4, 5, 6, 7 };
@@ -180,6 +184,7 @@ namespace cvisoftware
             Sensor [] sensors =new Sensor [length];
             for(int i=0;i<length;i++)
             {
+                //配置每一个传感器一系列参数
                 sensors[i] = new Sensor();
                 sensors[i].SensorNo = i + 1;
                 sensors[i].Name = tName[i];
@@ -199,6 +204,7 @@ namespace cvisoftware
         private void sensorNameInit(int startId=1)
         {
             int id = startId;
+            //传感器的名字放到全局变量中，可以方便的修改
             foreach(string sN in sensorNameStringList)
             {
                 var sensorName = new SensorName();
@@ -233,8 +239,17 @@ namespace cvisoftware
             //下拉框的内容
             prodInfoItem.selectitem[0] = "";
             //添加到条目信息表
-            string postDataString = string.Format("itemNo={0}&itemName={1}&defaultContent={2}&inputMode={3}&queryCondition=1&selectItem={4}&print=1&display=1&changeable=1&englishName={5}&statusBar=1&englishDefaultContent={6}itemType={7}&versionNo={8}&labCode={9}"
-                ,prodInfoItem.itemno,prodInfoItem.itemname,prodInfoItem.defaultcontent,prodInfoItem.inputmode,prodInfoItem.selectitem[0],prodInfoItem.enitemname,prodInfoItem.endefaultcontent,prodInfoItem.itemtype,versionNo,labCode);
+            string postDataString = string.Format("itemNo={0}&itemName={1}&defaultContent={2}&inputMode={3}&queryCondition=1&selectItem={4}&print=1&display=1&changeable=1&englishName={5}&statusBar=1&englishDefaultContent={6}itemType={7}&versionNo={8}&labCode={9}",
+                prodInfoItem.itemno,
+                prodInfoItem.itemname,
+                prodInfoItem.defaultcontent,
+                prodInfoItem.inputmode,
+                prodInfoItem.selectitem[0],
+                prodInfoItem.enitemname,
+                prodInfoItem.endefaultcontent,
+                prodInfoItem.itemtype,
+                versionNo,
+                labCode);
             string res = PostData(addProdInfoItemURL, postDataString);
             logSysInfo("添加条目信息 " + prodInfoItem.itemname + res);
             Trace.WriteLine("添加条目信息 "+prodInfoItem.itemname+res);
@@ -262,7 +277,10 @@ namespace cvisoftware
                 group.EnName = enName;
                 groupList.Add(group);
                 string postDataString = string.Format("groupNo={0}&labCode={1}&name={2}&englishName={3}&sensorType=1&deleteable=0&visible=1&minselect=1&maxSelect=1&averageSelect=1&integerAveSelect=1",
-                    group.GroupNo, labCode, group.Name, group.EnName);
+                    group.GroupNo, 
+                    labCode, 
+                    group.Name, 
+                    group.EnName);
                 string res = PostData(addGroupURL, postDataString);
                 logSysInfo("配置组信息" + group.Name + "res");
                 Trace.WriteLine("配置组信息" + group.Name + "res");
@@ -612,7 +630,24 @@ namespace cvisoftware
             //定义添加系统表数据的url
             string url2 = "http://115.28.236.114/RestInterfaceSystem/systemInfoController/addSystemInfo";
             string data2 = string.Format("labCode={17}&noPowerLimit=5&softwareName={0}&companyName={1}&testUnitNum={2}&sensorNum={3}&category={4}&language={5}&testUnitNameConfig={6}&inputLink={7}&commonSensorNum={8}&englishSoftwareName={9}&englishTestUnitNameConfig={10}&displayFlag={11}&displayTimeLimit={12}&infoQueryTimeLimit={13}&testTable={14}&labName={15}&englishLabName={16}",
-                sysInfo.SoftwareName,sysInfo.CompanyName,sysInfo.TestUnitNum,sysInfo.SensorNum,sysInfo.Category,sysInfo.Language,sysInfo.TestUnitNameConfig,sysInfo.InputLink?'1':'0',sysInfo.CommonSensorNum,sysInfo.EnSoftwareName,sysInfo.EnTestUnitNameConfig,sysInfo.DisplayFlag,sysInfo.DisplayTimeLimit,sysInfo.InfoQueryTimeLimit,null,sysInfo.LabName,sysInfo.EnLabName,labCode);
+                sysInfo.SoftwareName,
+                sysInfo.CompanyName,
+                sysInfo.TestUnitNum,
+                sysInfo.SensorNum,
+                sysInfo.Category,
+                sysInfo.Language,
+                sysInfo.TestUnitNameConfig,
+                sysInfo.InputLink?'1':'0',
+                sysInfo.CommonSensorNum,
+                sysInfo.EnSoftwareName,
+                sysInfo.EnTestUnitNameConfig,
+                sysInfo.DisplayFlag,
+                sysInfo.DisplayTimeLimit,
+                sysInfo.InfoQueryTimeLimit,
+                null,
+                sysInfo.LabName,
+                sysInfo.EnLabName,
+                labCode);
             //将数据添加到数据表中
             //MessageBox.Show(data2);
             //MessageBox.Show(PostData(url2, data2));
@@ -684,17 +719,27 @@ namespace cvisoftware
         /// <param name="e"></param>
         private void button_InitAll_Click(object sender, EventArgs e)
         {
+            //检查labcode是不是我们想要的labcode
             if (!checkLabCode()) return;
+            //系统的初始化
             systemInit();
+            //导航栏配置
             navigationInit();
+            //测试单元配置
             testUnitInit();
+            //窗体的配置
             windowInit();
+            //子窗体配置
             subWindowInit();
+            //坐标系配置
             coordInit();
+            //传感器配置
             sensorTypeInit();
             //groudInit();
            // prodInfoItemInit();
+           //传感器名称配置
             sensorNameInit();
+            //传感器参数配置
             sensorConfigInit();
         }
 
