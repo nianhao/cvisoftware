@@ -25,7 +25,7 @@ namespace cvisoftware
         /// <summary>
         /// 设置测试单元的接口地址
         /// </summary>
-        private static string testUnitPostURL = string.Format("{0}/testUnitNavigationInfoController/addTestUnitConfig", restHost);
+        private static string testUnitPostURL = string.Format("{0}/testUnitConfigController/addTestUnitConfig", restHost);
         /// <summary>
         /// 设置主窗体的接口地址
         /// </summary>
@@ -327,7 +327,7 @@ namespace cvisoftware
                 //保存主窗体
                 mainWindowList.Add(tmpWindow);//??这里会不会存在浅拷贝的问题？
                 string res = PostData(windowAddPostURL, postDataString);
-                MessageBox.Show("窗体初始化"+res);
+                MessageBox.Show("主窗体初始化"+res);
                 //回显设置的结果
                 Trace.WriteLine(res);
 
@@ -368,8 +368,14 @@ namespace cvisoftware
             foreach(Navigation tmp in bridgeNavs)
             {
                 string postDataString = string.Format("id={0}&name={1}&description={2}&belongedId={3}&englishName={4}&labCode={5}",
-                    tmp.Id,tmp.Name,tmp.Description,tmp.BelongedId,tmp.EnName,labCode);
+                    tmp.Id,
+                    tmp.Name,
+                    tmp.Description,
+                    tmp.BelongedId,
+                    tmp.EnName,
+                    labCode);
                 string res = PostData(navPostURL, postDataString);
+                MessageBox.Show("导航栏添加" + res);
             }
             //添加10个测试单元
             
@@ -396,9 +402,17 @@ namespace cvisoftware
             {
                 try
                 {
-                    string postDataString = string.Format("testUnitNo={0}&testUnitName={1}&belongedId={2}&ifBorrow={3}&isGroupInfoDefault={4}&englishName={5}&diffMode={6}&&labCode={7}"
-                   , tmp.TestUnitNo, tmp.TestUnitName, tmp.BelongedId, tmp.IfBorrow?'1':'0', tmp.IsGroupInfoDefault.ToString(), tmp.EnTestUnitName, tmp.DiffMode.ToString(), labCode);
-                    MessageBox.Show("导航栏初始化" + PostData(navPostURL, postDataString));
+                    string postDataString = string.Format("testUnitNo={0}&testUnitName={1}&belongedId={2}&ifBorrow={3}&isGroupInfoDefault={4}&groupInfoDefault=1&englishName={5}&diffMode={6}&&labCode={7}"
+                   ,tmp.TestUnitNo,
+                   tmp.TestUnitName,
+                   tmp.BelongedId, 
+                   tmp.IfBorrow?'1':'0', 
+                   tmp.IsGroupInfoDefault?'1':'0', 
+                   tmp.EnTestUnitName, 
+                   tmp.DiffMode.ToString(), 
+                   labCode);
+                    MessageBox.Show(postDataString);
+                    MessageBox.Show("监测单元初始化"+tmp.TestUnitName + PostData(testUnitPostURL, postDataString));
                 }
                 catch (Exception e)
                 {
@@ -519,8 +533,8 @@ namespace cvisoftware
         /// <param name="e"></param>
         private void button_InitAll_Click(object sender, EventArgs e)
         {
-            systemInit();
-            navigationInit();
+           // systemInit();
+            //navigationInit();
             windowInit();
             subWindowInit();
             coordInit();
