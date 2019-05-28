@@ -629,7 +629,7 @@ namespace cvisoftware
             //string result = GetData(url);
             //定义添加系统表数据的url
             string url2 = "http://115.28.236.114/RestInterfaceSystem/systemInfoController/addSystemInfo";
-            string data2 = string.Format("labCode={17}&noPowerLimit=5&softwareName={0}&companyName={1}&testUnitNum={2}&sensorNum={3}&category={4}&language={5}&testUnitNameConfig={6}&inputLink={7}&commonSensorNum={8}&englishSoftwareName={9}&englishTestUnitNameConfig={10}&displayFlag={11}&displayTimeLimit={12}&infoQueryTimeLimit={13}&testTable={14}&labName={15}&englishLabName={16}",
+            string data2 = string.Format("labCode={17}&noPowerLimit=5&softwareName={0}&companyName={1}&testUnitNum={2}&sensorNum={3}&category={4}&language={5}&testUnitNameConfig={6}&inputLink={7}&commonSensorNum={8}&englishSoftwareName={9}&englishTestUnitNameConfig={10}&displayFlag={11}&displayTimeLimit={12}&infoQueryTimeLimit={13}&testTable={14}&labName={15}&englishLabName={16}&preValue=0&cacheValue=10&loadable=1&reportPassword=123456&noPowerLimit=1&testCollectionPassword=123456&noPowerLimit=1&testCollectionPassword=123456&currentTestProdInfoItem=1.0.0&currentSensorConfig=2.1.0&currentCoorDinateConfig=3.1.0",
                 sysInfo.SoftwareName,
                 sysInfo.CompanyName,
                 sysInfo.TestUnitNum,
@@ -644,7 +644,7 @@ namespace cvisoftware
                 sysInfo.DisplayFlag,
                 sysInfo.DisplayTimeLimit,
                 sysInfo.InfoQueryTimeLimit,
-                null,
+                "testdata",
                 sysInfo.LabName,
                 sysInfo.EnLabName,
                 labCode);
