@@ -117,6 +117,10 @@ namespace cvisoftware
         /// </summary>
         TestUnit[] testUnit;// = new TestUnit();
         private int subWindowNo = 1;
+        private ProdInfoItem[] prodInfoItem;
+        private Group[] group;
+        private int importantId=10;
+
         public Form1()
         {
             InitializeComponent();
@@ -583,7 +587,7 @@ namespace cvisoftware
                         tmp.DiffMode.ToString(), 
                         labCode,
                         "1");
-                    MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
+                    //MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
                     logSysInfo("测试单元初始化" + "\n\n" + postDataString + "\n" + PostData(testUnitPostURL, postDataString));
                 }
                 catch (Exception e)
@@ -716,6 +720,124 @@ namespace cvisoftware
 
         }
         /// <summary>
+        /// 组信息配置
+        /// 对应groupConfig表
+        /// </summary>
+        public void groupInfoMsgInit()
+        {
+            ///只示范加入两个组信息配置数据，
+            group = new Group[4];
+            group[0] = new Group();
+            group[0].GroupNo = 1;
+            group[0].Name = "环温";
+            group[0].EnName = "Enviroment Temperature";
+
+            group[1] = new Group();
+            group[1].GroupNo = 2;
+            group[1].Name = "冷藏";
+            group[1].EnName = "Refrigeration";
+
+            group[2] = new Group();
+            group[2].GroupNo = 3;
+            group[2].Name = "冷冻";
+            group[2].EnName = "Freeze";
+
+            group[3] = new Group();
+            group[3].GroupNo = 5;
+            group[3].Name = "电参数";
+            group[3].EnName = "Environment Temperature";
+            int flag = 1;
+            for (int i = 0; i < group.Length; i++)
+            {
+                string groupUrl = "http://115.28.236.114/RestInterfaceSystem/groupConfigController/addGroupConfig";
+                string groupData = "groupNo=" + group[i].GroupNo +
+                    "&name=" + group[i].Name +
+                    "&maxSelect=1" +
+                    "&minSelect=1" +
+                    "&integerAveSelect=1" +
+                    "&averageSelect=1" +
+                    "&deletable=0" +
+                    "&visible=1" +
+                    "&sensorType=1" +   //组相对的传感器类型，1是传感器类型为温度
+                    "&englishName=" + group[i].EnName +
+                    "&labCode=" + labCode +
+                    "&lowTrmUpLimit=1" +
+                    "&lowTrmDownLimit=1" +
+                    "&lowTriUpLimit=1" +
+                    "&lowTriDownLimit=1" +
+                    "&highTrmUpLimit=1" +
+                    "&highTrmDownLimit=1" +
+                    "&highTriUpLimit=1" +
+                    "&highTriDownLimit=1";
+
+                string groupRus = PostData(groupUrl, groupData);
+                string rus = groupRus.Substring(groupRus.IndexOf(":") + 1, 3);
+                if (!rus.Equals("200"))
+                {
+                    flag = 0;
+                    MessageBox.Show("第：" + i.ToString() + "个组信息配置失败，失败编码： " + rus + "\n");
+                }
+            }
+            if (flag == 1)
+                MessageBox.Show("组信息配置成功\n");
+        }
+
+        /// <summary>
+        /// 录入条目信息
+        /// 对应testProdInfoItem表
+        /// </summary>
+        public void prodInfoItemMsgInit()
+        {
+            ///只示范加入两个录入条目信息配置数据，
+            prodInfoItem = new ProdInfoItem[2];
+
+            prodInfoItem[0] = new ProdInfoItem();
+            prodInfoItem[0].itemno = importantId;
+            prodInfoItem[0].itemname = "试品编号";
+            prodInfoItem[0].enitemname = "Product Name";
+            prodInfoItem[0].itemtype = 1;
+
+            prodInfoItem[1] = new ProdInfoItem();
+            prodInfoItem[1].itemno = importantId + 1;
+            prodInfoItem[1].itemname = "产品型号";
+            prodInfoItem[1].enitemname = "Product Model";
+            prodInfoItem[1].itemtype = 1;
+
+            int flag = 1;
+            for (int i = 0; i < prodInfoItem.Length; i++)
+            {
+                string prodInfoUrl = "http://115.28.236.114/RestInterfaceSystem/testProdInfoItemController/addTestProdInfoItem";
+                string proInfoData =
+                    "&itemNo=" + prodInfoItem[i].itemno +
+                    "&itemName=" + prodInfoItem[i].itemname +
+                    "&defaultContent=/" +
+                    "&inputMode=1" +
+                    "&queryCondition=1" +
+                    "&selectItem=耗电量测试@冷却速度测试@/" +
+                    "&print=1" +
+                    "&display=1" +
+                    "&changeable=1" +
+                    "&englishName=" + prodInfoItem[i].enitemname +
+                    "&englishSelectItem=21321" +
+                    "&statusBar=1" +
+                    "&englishDefaultContent=dasdas" +
+                    "&itemType=1" +
+                    "&versionNo=1.1.0" +
+                    "&keyItem=dsada" +
+                    "&labCode=" + labCode;
+
+                string prodRus = PostData(prodInfoUrl, proInfoData);
+                string rus = prodRus.Substring(prodRus.IndexOf(":") + 1, 3);
+                if (!rus.Equals("200"))
+                {
+                    flag = 0;
+                    MessageBox.Show("第：" + i.ToString() + "个录入条目信息配置失败，失败编码： " + rus + "\n");
+                }
+            }
+            if (flag == 1)
+                MessageBox.Show("录入条目信息配置成功\n");
+        }
+        /// <summary>
         /// 全部初始化，调用所有配置函数
         /// </summary>
         /// <param name="sender"></param>
@@ -744,6 +866,8 @@ namespace cvisoftware
             sensorNameInit();
             //传感器参数配置
             sensorConfigInit();
+            groupInfoMsgInit();
+            prodInfoItemMsgInit();
         }
 
         private bool checkLabCode()
