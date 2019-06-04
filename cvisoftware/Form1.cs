@@ -55,7 +55,7 @@ namespace cvisoftware
         /// <summary>
         /// 添加传感器名称的接口地址
         /// </summary>
-        private static string addSensorNameURL = string.Format("{0}/sensorNameController/addSensorName",restHost);
+        private static string addSensorNameURL = string.Format("{0}/sensorConfigController/addSensorName", restHost);
         /// <summary>
         /// 添加传感器配置的接口地址
         /// </summary>
@@ -318,7 +318,7 @@ namespace cvisoftware
                        tmpSensorLimit.LowLimit);
                 //提交配置并且回显配置结果
                 //对于温度，提交12次
-                if(index==0)
+                /*if(index==0)
                 {
                     for(int i=0;i<12;i++)
                     {
@@ -330,14 +330,14 @@ namespace cvisoftware
                         Trace.WriteLine(res);
                     }
                 }
-                else
-                {
+                else*/
+                //{
                     sensorList.Add(tmpSensor);
                     string res = PostData(addSensorTypeURL, postDataString);
                     //MessageBox.Show("添加传感器类型" + "\n" + postDataString + "\n" + res);
                     logSysInfo("添加传感器类型" + "\n" + postDataString + "\n" + res);
                     Trace.WriteLine(res);
-                }
+               // }
                 
                 //进入到下一个传感器的配置
                 index++;
@@ -429,6 +429,7 @@ namespace cvisoftware
                 var refrig = refrigeratorList[i] as TestUnit;
                 //先对每个testUnit设置一个子窗体看看效果
                 SubWindow tmpSW = new SubWindow();
+                //利用ArrayList实现数组的动态修改
                 var sub=refrig.SubWindowInfo.ToList();
                 sub.Add(tmpSW);
                 refrig.SubWindowInfo = sub.ToArray();
@@ -436,6 +437,7 @@ namespace cvisoftware
                 refrig.SubWindowInfo[0].SubWindowNo = 1;
                 //设置子窗体名称
                 refrig.SubWindowInfo[0].Name = "温度";
+                
                 //设置子窗口高度比例加权系数
                 refrig.SubWindowInfo[0].Proportion = 2;
                 //设置所属的主窗口
@@ -574,14 +576,14 @@ namespace cvisoftware
                         tmp.BelongedId,
                         tmp.IfBorrow ? '1' : '0',
                         "1@2@3@4",
-                        tmp.IsGroupInfoDefault ? '1' : '0', 
+                        tmp.IsGroupInfoDefault? '1' : '0', 
                         "1@2@3",
                         "100",
                         tmp.EnTestUnitName, 
                         tmp.DiffMode.ToString(), 
                         labCode,
                         "1");
-                    //MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
+                    MessageBox.Show("测试单元初始化" +"\n\n"+postDataString+"\n"+ PostData(testUnitPostURL, postDataString));
                     logSysInfo("测试单元初始化" + "\n\n" + postDataString + "\n" + PostData(testUnitPostURL, postDataString));
                 }
                 catch (Exception e)
@@ -597,7 +599,8 @@ namespace cvisoftware
             sysInfo.SoftwareName = "实验1软件";
             sysInfo.EnSoftwareName = "softWareforexperiment";
             sysInfo.CompanyName = "实验室";
-            sysInfo.EnTestUnitNameConfig = "Fridge";
+            sysInfo.TestUnitNameConfig = "冰箱";
+            sysInfo.EnTestUnitNameConfig = "Refrigerator";
             //设置检测单元总数，总计10台冰箱
             sysInfo.TestUnitNum = 10;
             //设置传感器总数 10*17=170
@@ -606,7 +609,7 @@ namespace cvisoftware
             sysInfo.Category = 2;
             //双语显示
             sysInfo.Language = 0;
-            sysInfo.TestUnitNameConfig = "冰箱";
+            //sysInfo.TestUnitNameConfig = "冰箱";
             //设置是否调用传感器配置,true表示调用
             sysInfo.InputLink = true;
             //设置公用传感器数量
