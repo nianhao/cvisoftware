@@ -775,10 +775,10 @@ namespace cvisoftware
             DataComponent.GetControlType();
 
             //曲线初始化
-            int rtn = dataComponent.InitCurve();
+            //int rtn = dataComponent.InitCurve();
 
             //数据组件初始化
-            rtn = dataComponent.Init();
+            int rtn = dataComponent.Init();
 
             //获取正在测试的监测单元
 
@@ -956,6 +956,12 @@ namespace cvisoftware
         {
             setLabCode setL = new setLabCode();
             setL.Show();
+        }
+
+        private void 测试信息录入ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            enterDataForm eform = new enterDataForm();
+            eform.Show();
         }
     }
 }

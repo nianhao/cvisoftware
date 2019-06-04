@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Root>	
+	<Type>Refrigerator_Type</Type>
+	<ParameterName>冰箱统计值</ParameterName>
+	<FileName>Statistics.dll</FileName>
+	<Namespace>Statistics</Namespace>
+	<Class>Statistics.Statistics</Class>
+	<Mode>SHOW</Mode>
+	<DataType>
+		<DataMode>NEWEST</DataMode >
+		<RequiredBeginTime>YES</RequiredBeginTime>
+		<RequiredENDTime>YES</RequiredENDTime>
+	</DataType>
+</Root>
