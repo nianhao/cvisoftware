@@ -1,0 +1,10 @@
+﻿high	tRmupper	tRmlower	tRiupper	tRilower
+tR1	12	10	12	10
+tR2	7	5	7	5
+tR3	5	3	5	3
+tF1star1	-6	-10
+tF1star2	-6	-12
+tf2star1	-12	-16
+tf2star2	-12	-18
+tf3star1	-18	-20
+tf3star2	-18	-24
