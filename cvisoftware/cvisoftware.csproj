@@ -33,8 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AxInterop.MSWinsockLib">
-      <HintPath>..\basecomponent\基础组件\AxInterop.MSWinsockLib.dll</HintPath>
+    <Reference Include="AxInterop.MSWinsockLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\AxInterop.MSWinsockLib.dll</HintPath>
     </Reference>
     <Reference Include="CurveControl">
       <HintPath>..\basecomponent\基础组件\CurveControl.dll</HintPath>
