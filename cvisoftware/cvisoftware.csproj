@@ -68,6 +68,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="delAll.cs" />
     <Compile Include="enterData.cs" />
     <Compile Include="enterDataForm.cs">
       <SubType>Form</SubType>
@@ -89,6 +90,7 @@
     <Compile Include="setLabCode.Designer.cs">
       <DependentUpon>setLabCode.cs</DependentUpon>
     </Compile>
+    <Compile Include="interfaceURL.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

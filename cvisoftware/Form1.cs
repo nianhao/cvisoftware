@@ -237,7 +237,7 @@ namespace cvisoftware
             prodInfoItem.defaultcontent = "/";
             prodInfoItem.endefaultcontent = "/";
             //录入条目信息类型 1为文本类型
-            prodInfoItem.inputmode = 1;
+            prodInfoItem.inputmode = 4;
             //录入条目类型
             prodInfoItem.itemtype = 1;
             //下拉框的内容
@@ -811,7 +811,7 @@ namespace cvisoftware
                     "&itemNo=" + prodInfoItem[i].itemno +
                     "&itemName=" + prodInfoItem[i].itemname +
                     "&defaultContent=/" +
-                    "&inputMode=1" +
+                    "&inputMode=4" +
                     "&queryCondition=1" +
                     "&selectItem=耗电量测试@冷却速度测试@/" +
                     "&print=1" +
@@ -1089,6 +1089,12 @@ namespace cvisoftware
         {
             enterDataForm eform = new enterDataForm();
             eform.Show();
+        }
+
+        private void buttonDelAllConfig_Click(object sender, EventArgs e)
+        {
+            string res = delAll.delAllConfig();
+            logSysInfo(res);
         }
     }
 }
